@@ -22,6 +22,7 @@ object Main extends JFXApp3 {
     val playButton = new Button("Jouer")
     val quitButton = new Button("Quitter")
     val restartButton = new Button("Restart")
+    val retryButton = new Button("Retry")
     val menu = new VBox(playButton, quitButton)
     menu.alignment = Pos.Center
     menu.spacing = 10
@@ -49,34 +50,35 @@ object Main extends JFXApp3 {
       startGame()
     }
 
+    retryButton.onAction = _ => {
+      stage.scene = gameScene
+      startGame()
+    }
+
     def startGame(): Unit = {
       var ronds = (for (_ <- 1 to 50) yield {
         Rond(
           random.nextDouble() * screenWidth,
           random.nextDouble() * screenHeight,
-          random.nextDouble() * 4 - 2,
-          random.nextDouble() * 4 - 2,
           Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256)),
           10
         )
       }).toList
 
-      var player = Rond(screenWidth / 2, screenHeight / 2, 0, 0, Color.Blue, 20)
+      var player = Rond(screenWidth / 2, screenHeight / 2, Color.Blue, 20)
 
       gamePane.children = (ronds :+ player).map(_.circle)
 
       stage.scene.value.onMouseMoved = (me: MouseEvent) => {
-        player.circle.centerX.value = me.x
-        player.circle.centerY.value = me.y
+        player = player.copy(x = me.x, y = me.y)
       }
 
       var timer: AnimationTimer = null
       timer = AnimationTimer(_ => {
         ronds = ronds.map(_.move(screenWidth, screenHeight))
-        for (rond <- ronds) {
-          player = player.handleCollision(rond, isPlayer = true)
-          ronds = ronds.map(_.handleCollision(rond, isPlayer = false))
-        }
+        player = ronds.foldLeft(player)((p, rond) => p.handleCollision(rond, isPlayer = true))
+        ronds = ronds.map(_.handleCollision(player, isPlayer = false))
+
         gamePane.children = (ronds :+ player).map(_.circle)
 
         if (player.collidesWithAny(ronds)) {
@@ -84,7 +86,7 @@ object Main extends JFXApp3 {
           val gameOverText = new Text("Game Over")
           gameOverText.layoutX = screenWidth / 2
           gameOverText.layoutY = screenHeight / 2
-          gamePane.children = List(gameOverText, restartButton, quitButton)
+          gamePane.children = List(gameOverText, retryButton, quitButton)
         }
       })
 

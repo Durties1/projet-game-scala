@@ -42,3 +42,20 @@ final case class Rond(x: Double, y: Double, dx: Double, dy: Double, color: Color
     others.exists(this.collidesWith)
   }
 }
+
+object Rond {
+  def apply(x: Double, y: Double, color: Color, rayon: Double): Rond = {
+    val direction = Direction.randomDirection
+    val (dx, dy) = direction match {
+      case Direction.North => (0, -1)
+      case Direction.NorthEast => (1, -1)
+      case Direction.East => (1, 0)
+      case Direction.SouthEast => (1, 1)
+      case Direction.South => (0, 1)
+      case Direction.SouthWest => (-1, 1)
+      case Direction.West => (-1, 0)
+      case Direction.NorthWest => (-1, -1)
+    }
+    new Rond(x, y, dx, dy, color, rayon)
+  }
+}
